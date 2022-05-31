@@ -32,7 +32,7 @@ class ReportController extends Controller
 			$earlier = new \DateTime($startDate);
 			$later = new \DateTime($endDate);
 			$diff = $later->diff($earlier)->format("%a");
-			
+
 			if ($diff >= 31) {
 				return redirect('admin/reports/revenue');
 			}
@@ -52,7 +52,7 @@ class ReportController extends Controller
             $date = $startDate;
             $startDate = date('Y-m-d', strtotime("+1 day", strtotime($startDate)));
 
-            $revenue = Transaction::where('created_at', 'LIKE', "%$date%")->sum('total_price'); 
+            $revenue = Transaction::where('created_at', 'LIKE', "%$date%")->sum('total_price');
 
             $total_revenue += $revenue;
 
@@ -61,7 +61,7 @@ class ReportController extends Controller
             $row['revenue'] = $revenue;
             $reports[] = $row;
 		}
-		
+
 		if ($exportAs = $request->input('export')) {
 			if (!in_array($exportAs, ['xlsx', 'pdf'])) {
 				return redirect()->route('admin.reports.revenue');
@@ -73,16 +73,25 @@ class ReportController extends Controller
 				return Excel::download(new RevenueExport($reports, $total_revenue), $fileName);
 			}
 
-			if ($exportAs == 'pdf') {
-				$fileName = 'report-revenue-'. $endDate .'-'. $startDate .'.pdf';
-				$pdf = PDF::loadView('admin.reports.exports.revenue-pdf', compact('reports','total_revenue','startDate','endDate'));
+			// if ($exportAs == 'pdf') {
+			// 	$fileName = 'report-revenue-'. $endDate .'-'. $startDate .'.pdf';
+			// 	$pdf = PDF::loadView('admin.reports.exports.revenue-pdf', compact('reports','total_revenue','startDate','endDate'));
 
-				return $pdf->download($fileName);
-			}
+			// 	return $pdf->download($fileName);
+			// }
         }
 
-        // dd($reports);
 
-		return view('admin.reports.revenue', compact('reports','total_revenue','startDate','endDate'));
+        // dd($reports);
+        return response()->json([
+            'status' => 'success',
+            'data' => $reports,
+            'revenue' => $revenue,
+            'total_revenue' => $total_revenue,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ], 200);
+
+		// return view('admin.reports.revenue', compact('reports','total_revenue','startDate','endDate'));
 	}
 }

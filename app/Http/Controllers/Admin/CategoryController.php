@@ -5,17 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Category;
 use Illuminate\Contracts\View\View;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use App\Http\Requests\CategoryRequest;
 
 class CategoryController extends Controller
 {
-   
-    public function index(): View
+
+    public function index()
     {
         $categories = Category::all();
 
-        return view('admin.categories.index', compact('categories'));
+        return response()->json([
+            'data' => $categories,
+        ]);
     }
 
     public function create(): View
@@ -23,13 +24,14 @@ class CategoryController extends Controller
         return view('admin.categories.create');
     }
 
-    public function store(CategoryRequest $request): RedirectResponse
+    public function store(CategoryRequest $request)
     {
-        Category::create($request->validated());
+        $category = Category::create($request->validated());
 
-        return redirect()->route('admin.categories.index')->with([
-            'message' => 'successfully created !',
-            'alert-type' => 'success'
+        return response()->json([
+            'status' => 200,
+            'data' => $category,
+            'message' => 'success',
         ]);
     }
 
@@ -43,24 +45,36 @@ class CategoryController extends Controller
         return view('admin.categories.edit', compact('category'));
     }
 
-    public function update(CategoryRequest $request, Category $category): RedirectResponse
+    public function update(CategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
 
-        return redirect()->route('admin.categories.index')->with([
-            'message' => 'successfully updated !',
-            'alert-type' => 'info'
+        return response()->json([
+            'status' => 200,
+            'data' => $category,
+            'message' => 'success',
         ]);
+
+        // return redirect()->route('admin.categories.index')->with([
+        //     'message' => 'successfully updated !',
+        //     'alert-type' => 'info'
+        // ]);
     }
 
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Category $category)
     {
         $category->delete();
 
-        return back()->with([
-            'message' => 'successfully deleted !',
-            'alert-type' => 'danger'
+        return response()->json([
+            'status' => 200,
+            'data' => $category,
+            'message' => 'success',
         ]);
+
+        // return back()->with([
+        //     'message' => 'successfully deleted !',
+        //     'alert-type' => 'danger'
+        // ]);
     }
 
     public function massDestroy()

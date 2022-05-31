@@ -18,12 +18,15 @@ class PermissionController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {      
+    {
         abort_if(Gate::denies('permission_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-    
+
         $permissions = Permission::get();
 
-        return view('admin.permissions.index', compact('permissions'));
+        return response()->json([
+            'data' => $permissions,
+        ], 200);
+        // return view('admin.permissions.index', compact('permissions'));
     }
 
     /**
@@ -97,7 +100,7 @@ class PermissionController extends Controller
     public function destroy(Permission $permission)
     {
         abort_if(Gate::denies('permission_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        
+
         $permission->delete();
 
         return redirect()->route('admin.permissions.index')->with([

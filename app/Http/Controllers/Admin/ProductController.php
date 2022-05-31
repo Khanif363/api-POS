@@ -14,22 +14,27 @@ use Illuminate\Http\RedirectResponse;
 class ProductController extends Controller
 {
     use MediaUploading;
-   
-    public function index(): View
-    {
-        $products = Product::all();
 
-        return view('admin.products.index', compact('products'));
+    public function index()
+    {
+        $productsPage = Product::with('category')->paginate(5);
+        $product = Product::all();
+        return response()->json([
+            'data' => $productsPage,
+            'product' => $product
+        ]);
+
     }
 
-    public function create(): View
+    public function create()
     {
+
         $categories = Category::all()->pluck('name','id');
 
         return view('admin.products.create', compact('categories'));
     }
 
-    public function store(ProductRequest $request): RedirectResponse
+    public function store(ProductRequest $request)
     {
         $product = Product::create($request->validated() + ['code' =>  rand(1,1000)]);
 
@@ -37,27 +42,47 @@ class ProductController extends Controller
             $product->addMedia(storage_path('tmp/uploads/' . $request->input('image')))->toMediaCollection('image');
         }
 
-        return redirect()->route('admin.products.index')->with([
-            'message' => 'successfully created !',
-            'alert-type' => 'success'
+
+        // return redirect()->route('admin.products.index')->with([
+        //     'message' => 'successfully created !',
+        //     'alert-type' => 'success'
+        // ]);
+
+        return response()->json([
+            'status' => 200,
+            'data' => $product,
+            'message' => 'success',
         ]);
     }
 
-    public function show(Product $product): View
+    public function show(Product $product, $id)
     {
-        return view('admin.products.show', compact('product'));
+        $product = Product::find($id);
+        return response()->json([
+            'status' => 200,
+            'data' => $product,
+            'message' => 'success',
+        ]);
+        // return view('admin.products.show', compact('product'));
+
+
     }
 
-    public function edit(Product $product): View
+    public function edit(Product $product)
     {
         $categories = Category::all()->pluck('name','id');
 
-        return view('admin.products.edit', compact('product', 'categories'));
+        return response()->json([
+            'status' => 200,
+            'data' => $product,
+            'message' => 'success',
+        ]);
+        // return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    public function update(ProductRequest $request, Product $product): RedirectResponse
+    public function update(ProductRequest $request, Product $product, $id)
     {
-        $product->update($request->validated());
+        $product->where('id', $id)->update($request->validated());
 
         if($request->input('image', false)){
             if(!$product->image || $request->input('image') !== $product->image->file_name){
@@ -68,20 +93,31 @@ class ProductController extends Controller
             $product->image->delete();
         }
 
-        return redirect()->route('admin.products.index')->with([
-            'message' => 'successfully updated !',
-            'alert-type' => 'info'
+        return response()->json([
+            'status' => 200,
+            'data' => $product,
+            'message' => 'success',
         ]);
+        // return redirect()->route('admin.products.index')->with([
+        //     'message' => 'successfully updated !',
+        //     'alert-type' => 'info'
+        // ]);
     }
 
-    public function destroy(Product $product): RedirectResponse
+    public function destroy($id)
     {
+        $product = Product::findOrFail($id);
         $product->delete();
 
-        return back()->with([
-            'message' => 'successfully deleted !',
-            'alert-type' => 'danger'
+        return response()->json([
+            'status' => 200,
+            'data' => $product,
+            'message' => 'success',
         ]);
+        // return redirect()->route('admin.products.index')->with([
+        //     'message' => 'successfully deleted !',
+        //     'alert-type' => 'warning'
+        // ]);
     }
 
     public function massDestroy()
@@ -93,7 +129,7 @@ class ProductController extends Controller
 
     public function search(Request $request){
         $products = Product::where('name', 'like', '%' . $request->search . '%')->get();
-        
+
         return json_encode($products);
     }
 }

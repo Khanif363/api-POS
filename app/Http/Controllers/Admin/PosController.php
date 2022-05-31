@@ -10,7 +10,8 @@ class PosController extends Controller
     public function index(){
 
         $products = Product::all();
-
-        return view('admin.pos.index', compact('products'));
+        return response()->json([
+            'data' => $products,
+        ], 200);
     }
 }

@@ -3,24 +3,27 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Cart;
+use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\TransactionDetail;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 
 class TransactionController extends Controller
 {
     public function index(){
         $transactions = Transaction::latest()->get();
-
-        return view('admin.transactions.index', compact('transactions'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $transactions
+        ], 200);
     }
     public function store(Request $request){
         $params = $request->all();
 
-        $transaction = \DB::transaction(function() use ($params) {
-            
+        $transaction = DB::transaction(function() use ($params) {
+
             $transactionParams = [
                 'transaction_code' => 'P100' . mt_rand(1,1000),
                 'name' => auth()->user()->name,
@@ -30,6 +33,11 @@ class TransactionController extends Controller
 			];
 
 			$transaction = Transaction::create($transactionParams);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $transaction
+            ], 200);
 
 			$carts = Cart::all();
 
@@ -48,31 +56,31 @@ class TransactionController extends Controller
 					];
 
 					$orderItem = TransactionDetail::create($orderItemParams);
-					
+
 					if ($orderItem) {
 						$product = Product::findOrFail($cart->product_id);
 						$product->quantity -= $cart->quantity;
 						$product->save();
                     }
-                    
+
                     $cart->delete();
 				}
             }
-            
+
             return $transaction;
         });
 
 
-        
+
 		if ($transaction) {
 			return redirect()->route('admin.transactions.show', $transaction->id)->with([
 				'message' => 'Success order',
 				'alert-type' => 'success'
 			]);
 		}
-    }  
-    
-    
+    }
+
+
     public function show(Transaction $transaction){
         return view('admin.transactions.show', compact('transaction'));
     }
@@ -80,7 +88,7 @@ class TransactionController extends Controller
 
 
     public function destroy(Transaction $transaction){
-       
+
         $transaction->delete();
 
         return redirect()->back()->with([
@@ -89,8 +97,8 @@ class TransactionController extends Controller
         ]);
     }
 
-    public function print_struck(Transaction $transaction){        
-        
+    public function print_struck(Transaction $transaction){
+
         return view('admin.transactions.nota', compact('transaction'));
     }
 }

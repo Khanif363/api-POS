@@ -14,6 +14,13 @@ class DashboardController extends Controller
         $users = User::all()->count();
         $transactions = Transaction::all()->count();
 
-        return view('admin.dashboard', compact('users','transactions'));
+        return response()->json([
+            'status' => 200,
+            'users' => $users,
+            'transactions' => $transactions,
+            'message' => 'success',
+        ]);
+
+        // return view('admin.dashboard', compact('users','transactions'));
     }
 }
